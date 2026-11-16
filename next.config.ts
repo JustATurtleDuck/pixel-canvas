@@ -2,6 +2,14 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+
+  output: 'export',
+  basePath: '/pixel-canvas',
+  assetPrefix: '/pixel-canvas/',
+  images: {
+    unoptimized: true,
+  },
+
   experimental: {
     agentFeedback: true,
   },
