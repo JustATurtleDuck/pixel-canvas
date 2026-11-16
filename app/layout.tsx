@@ -1,3 +1,6 @@
+// Helped with tailwind css
+// https://tailwindcss.com/docs/installation/play-cdn
+
 import type { Metadata } from "next";
 import "./globals.css";
 

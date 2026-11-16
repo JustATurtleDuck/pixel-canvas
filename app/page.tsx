@@ -1,20 +1,19 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 
-const COLORS = ["#000000", "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF", "#FFFFFF"];
+// Adjusted palette to feature TE's signature stark, highly saturated accent colors
+const COLORS = ["#1a1a1a", "#ff5500", "#00ff41", "#0055ff", "#ffea00", "#ff00cc", "#00ffff", "#ffffff"];
 const GRID_SIZE = 16;
 
-// Helper to safely create a fresh grid without tangling array references
-const createEmptyGrid = () =>
-  Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill("#FFFFFF"));
+const createEmptyGrid = () => 
+  Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill("#ffffff"));
 
 export default function PixelCanvas() {
   const [grid, setGrid] = useState<string[][]>(createEmptyGrid());
-  const [currentColor, setCurrentColor] = useState<string>("#000000");
+  const [currentColor, setCurrentColor] = useState<string>("#1a1a1a");
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
 
-  // Using a callback with prevGrid ensures we never miss a pixel if the user drags fast
   const paintPixel = useCallback((rowIndex: number, colIndex: number, colorToPaint: string) => {
     setGrid((prevGrid) => {
       const newGrid = [...prevGrid];
@@ -24,14 +23,13 @@ export default function PixelCanvas() {
     });
   }, []);
 
-  const handleMouseDown = (rowIndex: number, colIndex: number, e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleMouseDown = (rowIndex: number, colIndex: number) => {
     setIsDrawing(true);
     paintPixel(rowIndex, colIndex, currentColor);
   };
 
-  const handleMouseEnter = (rowIndex: number, colIndex: number, e: React.MouseEvent) => {
-    if (isDrawing || e.buttons === 1) {
+  const handleMouseEnter = (rowIndex: number, colIndex: number) => {
+    if (isDrawing) {
       paintPixel(rowIndex, colIndex, currentColor);
     }
   };
@@ -40,60 +38,58 @@ export default function PixelCanvas() {
     setGrid(createEmptyGrid());
   };
 
-  useEffect(() => {
-    const handleMouseUp = () => setIsDrawing(false);
-    window.addEventListener("mouseup", handleMouseUp);
-    return () => window.removeEventListener("mouseup", handleMouseUp);
-  }, []);
-
   return (
-    <div
-      className="min-h-screen bg-gray-100 flex flex-col items-center py-10 select-none"
+    <div 
+      className="min-h-screen bg-[#f4f4f4] font-mono text-[#1a1a1a] flex flex-col items-center py-12 select-none"
       onMouseUp={() => setIsDrawing(false)}
+      onMouseLeave={() => setIsDrawing(false)}
     >
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">Retro Pixel Canvas</h1>
-
-      {/* Palette */}
-      <div className="flex gap-2 mb-6 bg-white p-4 rounded shadow">
-        {COLORS.map((color) => (
-          <button
-            key={color}
-            type="button"
-            onClick={() => setCurrentColor(color)}
-            // Selected color gets a bold dark grey border and ring to clearly indicate selection
-            className={`w-10 h-10 rounded border-4 transition-all cursor-pointer ${
-              currentColor === color
-                ? "border-gray-800 scale-110 shadow-md ring-2 ring-offset-2 ring-gray-800"
-                : "border-gray-300 hover:border-gray-400"
-            }`}
-            style={{ backgroundColor: color }}
-            aria-label={`Select color ${color}`}
-          />
-        ))}
-        <button
-          type="button"
+      {/* Hardware Layout Header */}
+      <div className="w-full max-w-[512px] flex justify-between items-end border-b-2 border-[#1a1a1a] pb-2 mb-6">
+        <h1 className="text-xl font-bold tracking-tighter uppercase">pixel_canvas //</h1>
+        <span className="text-xs font-bold tracking-widest text-gray-500">v1.0.1</span>
+      </div>
+      
+      {/* Control Deck */}
+      <div className="flex w-full max-w-[512px] justify-between mb-8 items-center bg-[#e5e5e5] border-2 border-[#1a1a1a] p-3 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
+        <div className="flex gap-2">
+          {COLORS.map((color) => (
+            <button
+              key={color}
+              onClick={() => setCurrentColor(color)}
+              className={`w-8 h-8 rounded-full border-2 border-[#1a1a1a] transition-all ${
+                currentColor === color 
+                  ? 'scale-110 ring-2 ring-offset-2 ring-offset-[#e5e5e5] ring-[#1a1a1a]' 
+                  : 'opacity-90 hover:opacity-100'
+              }`}
+              style={{ backgroundColor: color }}
+              aria-label={`Select color ${color}`}
+            />
+          ))}
+        </div>
+        <button 
           onClick={clearCanvas}
-          className="ml-4 px-4 py-2 bg-red-500 text-white font-bold rounded hover:bg-red-600 transition-colors cursor-pointer"
+          className="px-4 py-2 bg-[#ff5500] text-white border-2 border-[#1a1a1a] text-xs font-bold uppercase tracking-widest hover:bg-[#1a1a1a] hover:text-[#ff5500] transition-colors"
         >
-          Clear
+          Reset
         </button>
       </div>
 
-      {/* Canvas */}
-      <div
-        className="bg-white border-4 border-gray-800 shadow-xl cursor-crosshair select-none"
-        style={{ touchAction: "none" }} // Stops trackpads from scrolling while drawing
-        onDragStart={(e) => e.preventDefault()} // Kills the HTML5 ghost-drag bug
+      {/* Screen / Matrix */}
+      <div 
+        className="bg-white border-2 border-[#1a1a1a] shadow-[8px_8px_0px_0px_rgba(26,26,26,1)] cursor-crosshair"
+        style={{ touchAction: 'none' }}
+        onDragStart={(e) => e.preventDefault()}
       >
         {grid.map((row, rowIndex) => (
           <div key={rowIndex} className="flex">
             {row.map((color, colIndex) => (
               <div
                 key={`${rowIndex}-${colIndex}`}
-                onMouseDown={(e) => handleMouseDown(rowIndex, colIndex, e)}
-                onMouseEnter={(e) => handleMouseEnter(rowIndex, colIndex, e)}
-                onClick={() => paintPixel(rowIndex, colIndex, currentColor)}
-                className="w-8 h-8 border border-gray-200"
+                onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
+                onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
+                // Faint graph-paper lines for the grid interior, hard edge for the exterior
+                className="w-8 h-8 border-r border-b border-gray-100 last:border-r-0"
                 style={{ backgroundColor: color }}
                 draggable={false}
               />
