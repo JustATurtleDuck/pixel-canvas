@@ -116,7 +116,7 @@ export default function PixelCanvas() {
           <h1 className="text-xl font-bold tracking-tighter uppercase">pixel_canvas //</h1>
           <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Shortcuts: [1-8] Colors | [CMD+Z] Undo</p>
         </div>
-        <span className="text-xs font-bold tracking-widest text-gray-500">v1.1.0</span>
+        <span className="text-xs font-bold tracking-widest text-gray-500">v1.1.1</span>
       </div>
       
       {/* Palette and Buttons */}
