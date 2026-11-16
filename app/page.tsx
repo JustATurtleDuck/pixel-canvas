@@ -113,7 +113,7 @@ export default function PixelCanvas() {
       {/* Hardware Layout Header */}
       <div className="w-full max-w-[512px] flex justify-between items-end border-b-2 border-[#1a1a1a] pb-2 mb-6">
         <div>
-          <h1 className="text-xl font-bold tracking-tighter uppercase">pixel_synth //</h1>
+          <h1 className="text-xl font-bold tracking-tighter uppercase">pixel_canvas //</h1>
           <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Shortcuts: [1-8] Colors | [CMD+Z] Undo</p>
         </div>
         <span className="text-xs font-bold tracking-widest text-gray-500">v1.1.0</span>
