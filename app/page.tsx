@@ -1,35 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 const COLORS = ["#000000", "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF", "#FFFFFF"];
 const GRID_SIZE = 16;
 
+// Helper to safely create a fresh grid without tangling array references
+const createEmptyGrid = () =>
+  Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill("#FFFFFF"));
+
 export default function PixelCanvas() {
-  const [grid, setGrid] = useState<string[][]>(Array(GRID_SIZE).fill(Array(GRID_SIZE).fill("#FFFFFF")));
+  const [grid, setGrid] = useState<string[][]>(createEmptyGrid());
   const [currentColor, setCurrentColor] = useState<string>("#000000");
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
 
-  const paintPixel = (rowIndex: number, colIndex: number) => {
-    const newGrid = grid.map((row, rIdx) =>
-      rIdx === rowIndex
-        ? row.map((color, cIdx) => (cIdx === colIndex ? currentColor : color))
-        : row
-    );
-    setGrid(newGrid);
-  };
+  // Using a callback with prevGrid ensures we never miss a pixel if the user drags fast
+  const paintPixel = useCallback((rowIndex: number, colIndex: number, colorToPaint: string) => {
+    setGrid((prevGrid) => {
+      const newGrid = [...prevGrid];
+      newGrid[rowIndex] = [...newGrid[rowIndex]];
+      newGrid[rowIndex][colIndex] = colorToPaint;
+      return newGrid;
+    });
+  }, []);
 
   const handleMouseDown = (rowIndex: number, colIndex: number) => {
     setIsDrawing(true);
-    paintPixel(rowIndex, colIndex);
+    paintPixel(rowIndex, colIndex, currentColor);
   };
 
   const handleMouseEnter = (rowIndex: number, colIndex: number) => {
-    if (isDrawing) paintPixel(rowIndex, colIndex);
+    if (isDrawing) {
+      paintPixel(rowIndex, colIndex, currentColor);
+    }
   };
 
   const clearCanvas = () => {
-    setGrid(Array(GRID_SIZE).fill(Array(GRID_SIZE).fill("#FFFFFF")));
+    setGrid(createEmptyGrid());
   };
 
   return (
@@ -46,21 +53,27 @@ export default function PixelCanvas() {
           <button
             key={color}
             onClick={() => setCurrentColor(color)}
-            className={`w-10 h-10 rounded border-2 ${currentColor === color ? 'border-gray-800 scale-110' : 'border-gray-300'}`}
+            // Upgraded visual indicator: adds a bold dark grey ring when selected
+            className={`w-10 h-10 rounded transition-all ${currentColor === color ? 'ring-4 ring-gray-800 scale-110' : 'border-2 border-gray-300'
+              }`}
             style={{ backgroundColor: color }}
             aria-label={`Select color ${color}`}
           />
         ))}
         <button
           onClick={clearCanvas}
-          className="ml-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+          className="ml-4 px-4 py-2 bg-red-500 text-white font-bold rounded hover:bg-red-600 transition-colors"
         >
           Clear
         </button>
       </div>
 
       {/* Canvas */}
-      <div className="bg-white border-4 border-gray-800 shadow-xl cursor-crosshair">
+      <div
+        className="bg-white border-4 border-gray-800 shadow-xl cursor-crosshair"
+        style={{ touchAction: 'none' }} // Stops trackpads from scrolling while drawing
+        onDragStart={(e) => e.preventDefault()} // Kills the HTML5 ghost-drag bug
+      >
         {grid.map((row, rowIndex) => (
           <div key={rowIndex} className="flex">
             {row.map((color, colIndex) => (
@@ -70,6 +83,7 @@ export default function PixelCanvas() {
                 onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
                 className="w-8 h-8 border border-gray-200"
                 style={{ backgroundColor: color }}
+                draggable={false}
               />
             ))}
           </div>
